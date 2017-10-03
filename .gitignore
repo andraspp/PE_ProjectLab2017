@@ -1,0 +1,5 @@
+# exclude devel folder
+devel/*
+
+# exclude build folder
+build/*
