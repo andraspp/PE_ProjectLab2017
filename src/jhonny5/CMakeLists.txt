@@ -104,6 +104,8 @@ catkin_package(
 #  INCLUDE_DIRS include
    LIBRARIES jhonny5
    CATKIN_DEPENDS
+   message_runtime
+   std_msgs
    actionlib_msgs
 #  DEPENDS system_lib
 )

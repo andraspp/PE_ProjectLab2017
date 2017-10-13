@@ -5,10 +5,7 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(10);
     ros::init(argc, argv, "state_machine");
 
-    unsigned int num_readings = 100;
-    double ranges[num_readings];
-    double laser_frequency = 40;
-    double intensities[num_readings];
+    unsigned int wallClose;
 
     //RobotState = init;
     RobotStopped = False;
