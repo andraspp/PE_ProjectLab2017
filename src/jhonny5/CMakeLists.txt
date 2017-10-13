@@ -102,7 +102,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES jhonny5
+   LIBRARIES jhonny5
    CATKIN_DEPENDS
    actionlib_msgs
 #  DEPENDS system_lib
@@ -115,13 +115,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-# ${catkin_INCLUDE_DIRS}
+  include
+  ${catkin_INCLUDE_DIRS}
+  jhonny5
 )
 
 ## Declare a C++ library
-add_library(${control_sw}
-  src/${control_sw}/jhonny5_main.cpp
+add_library(
+  jhonny5 jhonny5_main.cpp 
 )
 
 ## Add cmake target dependencies of the library
@@ -132,7 +133,7 @@ add_library(${control_sw}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/jhonny5_node.cpp)
+## add_executable(${PROJECT_NAME}_node jhonny5_main_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -145,9 +146,9 @@ add_library(${control_sw}
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME}
+  jhonny5 ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
