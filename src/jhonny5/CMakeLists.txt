@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
  )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(gazebo REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -118,13 +118,14 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
+  ${GAZEBO_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   jhonny5
 )
 
 ## Declare a C++ library
 add_library(
-  jhonny5 jhonny5_main.cpp 
+  jhonny5 jhonny5_main.cpp gazebo_ros_laser.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -149,7 +150,7 @@ add_library(
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
-  jhonny5 ${catkin_LIBRARIES}
+  jhonny5 ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES}
 )
 
 #############

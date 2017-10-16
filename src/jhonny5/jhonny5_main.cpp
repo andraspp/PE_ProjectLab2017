@@ -7,16 +7,14 @@ int main(int argc, char **argv)
 
     unsigned int wallClose;
 
-    //RobotState = init;
     RobotStopped = False;
     wallClose = False;
 
     ros::NodeHandle n;
-    //ros::Subscriber sub = n.subscribe("laserScannerFront", 10, scannerFrontCallback);
     ros::Publisher cmd_vel_pub_;
 
     cmd_vel_pub_ = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-    //Server stopRobotServer(n, "stop_robot", boost::bind(&executeStopRobot, _1, &server), false);
+
     
     geometry_msgs::Twist base_cmd;
     base_cmd.linear.x = 0.25;
@@ -45,8 +43,3 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-
-//void scannerFrontCallback(const std_msgs::Bool::ConstPtr& wallClose)
-//{
-//    ((wallClose == True) ? (WallDetectedFront = True) : (WallDetectedFront = False));
-//}
