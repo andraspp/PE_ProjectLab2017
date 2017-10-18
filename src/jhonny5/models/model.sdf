@@ -522,6 +522,10 @@
           </ray>
           <update_rate>30</update_rate>
           <visualize>true</visualize>
+          <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+            <topicName>/jhonny5/laser/scan</topicName>
+            <frameName>link</frameName>
+          </plugin>
         </sensor>
       </link>
       <pose frame=''>0.75 0 0.23 0 -0 0</pose>
@@ -671,6 +675,19 @@
         </ode>
       </physics>
     </joint>
+    <!-- <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+     <alwaysOn>true</alwaysOn>
+     <updateRate>20</updateRate>
+     <leftJoint>front_left_hinge</leftJoint>
+     <rightJoint>front_right_hinge</rightJoint>
+     <wheelSeparation>0.4</wheelSeparation>
+     <wheelDiameter>0.1</wheelDiameter>
+     <torque>20</torque>
+     <commandTopic>cmd_vel</commandTopic>
+     <odometryTopic>odom</odometryTopic>
+     <odometryFrame>odom</odometryFrame>
+     <robotBaseFrame>base_footprint</robotBaseFrame>
+   </plugin> -->
     <static>0</static>
     <allow_auto_disable>1</allow_auto_disable>
   </model>
