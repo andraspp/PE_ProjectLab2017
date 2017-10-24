@@ -1,9 +1,13 @@
+#ifndef JHONNY5_MAIN_HH
+#define JHONNY5_MAIN_HH
+
 #include "ros/ros.h"
 #include "std_msgs/Bool.h" 
 #include "std_msgs/String.h" 
 #include <geometry_msgs/Twist.h>
 #include <actionlib/server/simple_action_server.h>
 #include <sensor_msgs/LaserScan.h>
+#include <gazebo/gazebo.hh>
 #include <sstream>
 
 typedef enum robot_states_e
@@ -23,3 +27,4 @@ robot_states_t RobotState;
 robot_states_t RobotStateLastLoop;
 int            WallDetectedFront;
 int            RobotStopped;
+#endif /* JHONNY5_MAIN_HH */
