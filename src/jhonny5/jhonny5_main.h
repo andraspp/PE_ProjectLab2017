@@ -21,10 +21,26 @@ typedef enum robot_states_e
 
 #define False (0)
 #define True  (1)
-//typedef actionlib::SimpleActionServer<jhonny5::MoveOrder> Server;
+//typedef actionlib::SimpleActionServer<jhonny5::MoveOrder> MA;
 
 robot_states_t RobotState;
 robot_states_t RobotStateLastLoop;
-int            WallDetectedFront;
-int            RobotStopped;
+bool           FinishTileDetected;
+bool           WallDetectedFront;
+bool           RobotStopped;
+bool           CrossingDetectedLeft;
+bool           CrossingDetectedRight;
+bool           LocationCheckProcessDone;
+float          lsranges[10];
+
+void Jhonny5_init(void);
+void Jhonny5_input_processing(void);
+void Jhonny5_state_machine(void);
+void Jhonny5_execute_order(void);
+/* Callback functions */
+void finishTileCallback(const std_msgs::BoolConstPtr& str);
+void wallProximityCallback(const std_msgs::BoolConstPtr& str);
+void crossingLeftCallback(const std_msgs::BoolConstPtr& str);
+void crossingRightCallback(const std_msgs::BoolConstPtr& str);
+void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 #endif /* JHONNY5_MAIN_HH */
