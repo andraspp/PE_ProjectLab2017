@@ -8,6 +8,7 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+    roscpp
     actionlib_msgs
  )
 
@@ -120,13 +121,13 @@ include_directories(
   include
   ${GAZEBO_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
-  jhonny5
+  jhonny5_state_machine
 )
 
 ## Declare a C++ library
-add_library(
-  jhonny5 jhonny5_main.cpp gazebo_ros_laser.cpp
-)
+##add_library(
+##  jhonny5 jhonny5_main.cpp
+##)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -136,7 +137,7 @@ add_library(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-## add_executable(${PROJECT_NAME}_node jhonny5_main_node.cpp)
+add_executable(jhonny5_state_machine jhonny5_main.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,8 +150,8 @@ add_library(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}
-  jhonny5 ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES}
+target_link_libraries(
+  jhonny5_state_machine ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES}
 )
 
 #############
@@ -175,11 +176,11 @@ target_link_libraries(${PROJECT_NAME}
 # )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/jhonny5/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
