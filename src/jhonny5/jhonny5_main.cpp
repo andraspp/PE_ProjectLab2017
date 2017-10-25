@@ -2,16 +2,17 @@
 
 int main(int argc, char **argv)
 {
-    ros::Rate loop_rate(10);
     ros::init(argc, argv, "jhonny5_state_machine");
 
     Jhonny5_init();
     ros::NodeHandle nh;
-
-    ros::Subscriber finishTileCheck = nh.subscribe("/jhnonny5/finishtileinfo", 1, finishTileCallback);
-    ros::Subscriber wallProximityCheck = nh.subscribe("/jhnonny5/wallproximityinfo", 1, wallProximityCallback);
-    ros::Subscriber crossingLeftCheck = nh.subscribe("/jhnonny5/crossingleftinfo", 1, crossingLeftCallback);
-    ros::Subscriber crossingRightCheck = nh.subscribe("/jhnonny5/crossingrightinfo", 1, crossingRightCallback);
+    ros::Rate loop_rate(10);
+    
+    ros::Subscriber finishTileCheck = nh.subscribe("/jhonny5/finishtileinfo", 1, finishTileCallback);
+    ros::Subscriber wallProximityCheck = nh.subscribe("/jhonny5/wallproximityinfo", 1, wallProximityCallback);
+    ros::Subscriber crossingLeftCheck = nh.subscribe("/jhonny5/crossingleftinfo", 1, crossingLeftCallback);
+    ros::Subscriber crossingRightCheck = nh.subscribe("/jhonny5/crossingrightinfo", 1, crossingRightCallback);
+    ros::Subscriber laserScanCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan",10,&laserScanCallback);
 
     while(ros::ok())
     {
@@ -129,4 +130,13 @@ void crossingLeftCallback(const std_msgs::BoolConstPtr& str)
 void crossingRightCallback(const std_msgs::BoolConstPtr& str)
 {
     CrossingDetectedRight = (bool)str;
+}
+
+void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
+     int i;
+     for(i=0; i<10; i++)
+     {
+         lsranges[i] = scan->ranges[i];
+         printf("%1.8f\n",lsranges[i]);
+     }
 }

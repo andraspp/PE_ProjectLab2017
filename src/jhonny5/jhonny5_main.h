@@ -31,6 +31,7 @@ bool           RobotStopped;
 bool           CrossingDetectedLeft;
 bool           CrossingDetectedRight;
 bool           LocationCheckProcessDone;
+float          lsranges[10];
 
 void Jhonny5_init(void);
 void Jhonny5_input_processing(void);
@@ -41,4 +42,5 @@ void finishTileCallback(const std_msgs::BoolConstPtr& str);
 void wallProximityCallback(const std_msgs::BoolConstPtr& str);
 void crossingLeftCallback(const std_msgs::BoolConstPtr& str);
 void crossingRightCallback(const std_msgs::BoolConstPtr& str);
+void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 #endif /* JHONNY5_MAIN_HH */
