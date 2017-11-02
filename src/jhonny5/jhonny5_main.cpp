@@ -23,8 +23,8 @@ int main(int argc, char **argv)
     {
         if(avgrange > 2.5)
         {
-            base_cmd.linear.x = 1.00;
-            base_cmd.linear.y = base_cmd.angular.z = 0;
+            base_cmd.angular.z = 1.00;
+            base_cmd.linear.x = base_cmd.linear.y = 0;
         }
         else
         {
