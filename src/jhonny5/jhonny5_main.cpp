@@ -21,14 +21,37 @@ int main(int argc, char **argv)
 
     while(ros::ok())
     {
-        if(avgrange > 2.5)
+        if(   (avgrange > 1.2)
+           && (TurnFinished == 1)
+          )
         {
             base_cmd.angular.z = 1.00;
             base_cmd.linear.x = base_cmd.linear.y = 0;
+            StopTimer = 30;
+            TurnTimer = 100;
         }
         else
         {
             base_cmd.linear.x = base_cmd.linear.y = base_cmd.angular.z = 0;
+            if(StopTimer > 0)
+            {
+                StopTimer--;
+            }
+            else
+            {
+                if(TurnTimer > 0)
+                {
+                    base_cmd.linear.x = 0.25;
+                    base_cmd.linear.y = base_cmd.angular.z = 0;
+                    TurnTimer--;
+                    TurnFinished = 0;
+                }
+                else
+                {
+                    TurnFinished = 1;
+                }
+                
+            }
         }
 
         Jhonny5_state_machine();
@@ -51,6 +74,7 @@ void Jhonny5_init(void)
     CrossingDetectedLeft = False;
     CrossingDetectedRight = False;
     LocationCheckProcessDone = False;
+    TurnFinished = True;
 }
 
 void Jhonny5_state_machine(void)

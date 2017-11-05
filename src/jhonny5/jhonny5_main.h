@@ -33,6 +33,9 @@ bool           CrossingDetectedRight;
 bool           LocationCheckProcessDone;
 float          lsranges[10];
 float          avgrange;
+unsigned int   StopTimer;
+unsigned int   TurnTimer;
+bool           TurnFinished;
 
 void Jhonny5_init(void);
 void Jhonny5_input_processing(void);
