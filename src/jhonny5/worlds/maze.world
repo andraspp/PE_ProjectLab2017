@@ -1,0 +1,94 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="maze_world">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- MAZE START -->
+<include>
+	<uri>model://unit_box</uri>
+	<pose>-4 -4 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>-4 0 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>-4 4 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>-4 12 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>-4 16 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>-4 20 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>0 -4 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>0 4 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>0 12 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>0 16 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>0 20 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>4 -4 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>4 20 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>8 -4 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>8 0 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>8 4 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>8 8 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>8 12 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>8 16 0 0 0 0</pose>
+</include>
+<include>
+	<uri>model://unit_box</uri>
+	<pose>8 20 0 0 0 0</pose>
+</include>
+		<!-- MAZE END -->
+	</world>
+</sdf>

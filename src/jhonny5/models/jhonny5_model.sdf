@@ -22,7 +22,7 @@
         <pose frame=''>0 0 0 0 -0 0</pose>
         <geometry>
           <box>
-            <size>2 0.8 0.3</size>
+            <size>1 1 0.3</size>
           </box>
         </geometry>
         <material>
@@ -48,7 +48,7 @@
         <pose frame=''>0 0 0 0 -0 0</pose>
         <geometry>
           <box>
-            <size>2 0.8 0.3</size>
+            <size>1 1 0.3</size>
           </box>
         </geometry>
         <surface>
@@ -99,9 +99,9 @@
       </collision>
     </link>
     <link name='front_left_wheel'>
-      <pose frame=''>0.75 0.500004 -0.01 1.5707 -0 0</pose>
+      <pose frame=''>0.375 0.6 0 1.5707 -0 0</pose>
       <inertial>
-        <mass>0.001</mass>
+        <mass>0.01</mass>
         <inertia>
           <ixx>0</ixx>
           <ixy>0</ixy>
@@ -198,9 +198,9 @@
       </collision>
     </link>
     <link name='front_right_wheel'>
-      <pose frame=''>0.75 -0.500019 -0.01 1.5707 -0 0</pose>
+      <pose frame=''>0.375 -0.6 0 1.5707 -0 0</pose>
       <inertial>
-        <mass>0.001</mass>
+        <mass>0.01</mass>
         <inertia>
           <ixx>0</ixx>
           <ixy>0</ixy>
@@ -297,9 +297,9 @@
       </collision>
     </link>
     <link name='back_left_wheel'>
-      <pose frame=''>-0.75 0.500029 -0.01 1.5707 -0 0</pose>
+      <pose frame=''>-0.375 0.6 0 1.5707 -0 0</pose>
       <inertial>
-        <mass>0.001</mass>
+        <mass>0.01</mass>
         <inertia>
           <ixx>0</ixx>
           <ixy>0</ixy>
@@ -396,9 +396,9 @@
       </collision>
     </link>
     <link name='back_right_wheel'>
-      <pose frame=''>-0.75 -0.500019 -0.01 1.5707 -0 0</pose>
+      <pose frame=''>-0.375 -0.6 0 1.5707 -0 0</pose>
       <inertial>
-        <mass>0.001</mass>
+        <mass>0.01</mass>
         <inertia>
           <ixx>0</ixx>
           <ixy>0</ixy>
@@ -528,7 +528,79 @@
           </plugin>
         </sensor>
       </link>
-      <pose frame=''>0.75 0 0.23 0 -0 0</pose>
+      <pose frame=''>0.4 0 0.23 0 -0 0</pose>
+    </model>
+    <model name='ray_camera_left'>
+      <link name='link'>
+        <pose frame=''>0 0 0 1.5707 -0 0</pose>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+        <sensor name='sensor' type='ray'>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>32</samples>
+                <resolution>1</resolution>
+                <min_angle>-0.1</min_angle>
+                <max_angle>0.25</max_angle>
+              </horizontal>
+            </scan>
+            <range>
+              <min>0.05</min>
+              <max>70</max>
+              <resolution>0.02</resolution>
+            </range>
+          </ray>
+          <update_rate>30</update_rate>
+          <visualize>true</visualize>
+          <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+            <topicName>/jhonny5/laser/scan_left</topicName>
+            <frameName>link</frameName>
+          </plugin>
+        </sensor>
+      </link>
+      <pose frame=''>0 0.4 0.23 0 0 1.5707</pose>
+    </model>
+    <model name='ray_camera_right'>
+      <link name='link'>
+        <pose frame=''>0 0 0 1.5707 -0 0</pose>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+        <sensor name='sensor' type='ray'>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>32</samples>
+                <resolution>1</resolution>
+                <min_angle>-0.1</min_angle>
+                <max_angle>0.25</max_angle>
+              </horizontal>
+            </scan>
+            <range>
+              <min>0.05</min>
+              <max>70</max>
+              <resolution>0.02</resolution>
+            </range>
+          </ray>
+          <update_rate>30</update_rate>
+          <visualize>true</visualize>
+          <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+            <topicName>/jhonny5/laser/scan_right</topicName>
+            <frameName>link</frameName>
+          </plugin>
+        </sensor>
+      </link>
+      <pose frame=''>0 -0.4 0.23 0 0 -1.5707</pose>
     </model>
     <joint name='front_left_hinge' type='revolute'>
       <parent>base_frame</parent>
@@ -675,13 +747,47 @@
         </ode>
       </physics>
     </joint>
+    <joint name='fixed_left_ray_sensor_joint' type='fixed'>
+      <parent>base_frame</parent>
+      <child>ray_camera_left::link</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+    <joint name='fixed_right_ray_sensor_joint' type='fixed'>
+      <parent>base_frame</parent>
+      <child>ray_camera_right::link</child>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
     <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
      <updateRate>100.0</updateRate>
      <leftFrontJoint>front_left_hinge</leftFrontJoint>
      <rightFrontJoint>front_right_hinge</rightFrontJoint>
      <leftRearJoint>back_left_hinge</leftRearJoint>
      <rightRearJoint>back_right_hinge</rightRearJoint>
-     <wheelSeparation>1.5</wheelSeparation>
+     <wheelSeparation>1.2</wheelSeparation>
      <wheelDiameter>0.5</wheelDiameter>
      <MaxForce>5.0</MaxForce>
      <torque>200</torque>
