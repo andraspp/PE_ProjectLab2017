@@ -27,6 +27,17 @@ if ! pgrep -x "roscore" > /dev/null; then
   exit 1
 fi
 
+# Is the model env var correct?
+if echo "$GAZEBO_MODEL_PATH" | grep -q "jhonny5"; then
+  echo "ENV VAR: GAZEBO_MODEL_PATH is correctly initalized!"
+else
+  echo "Could not find the correct MODEL_PATH"
+  echo "Please initialize GAZEBO_MODEL_PATH by adding the following line to your ~/.bashrc"
+  echo "export GAZEBO_MODEL_PATH=$(dirname $(realpath -s $0))/src/jhonny5/models:\${GAZEBO_MODEL_PATH}"
+  echo "Exiting..."
+  exit 1
+fi
+
 # Start up our demo world
 source $DIR/devel/setup.bash
 roslaunch jhonny5 demo_world.launch
