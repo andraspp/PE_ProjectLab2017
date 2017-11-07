@@ -1,6 +1,9 @@
 #ifndef JHONNY5_MAIN_HH
 #define JHONNY5_MAIN_HH
 
+#define _USE_MATH_DEFINES
+
+#include <cmath>
 #include <ros/ros.h>
 #include <std_msgs/Bool.h> 
 #include <std_msgs/String.h>
@@ -11,6 +14,21 @@
 #include <gazebo/gazebo.hh>
 #include <tf/tf.h>
 #include <sstream>
+
+struct orientation {
+  float z; // sin (theta / 2)
+  float w; // cos (theta / 2)
+
+  orientation(void) : w(0.0f), z(0.0f) {}
+  orientation(float _z, float _w) : z(_z), w(_w) {}
+};
+
+typedef enum direction_e {
+  DOWN,
+  LEFT,
+  UP,
+  RIGHT
+} direction_t;
 
 typedef enum robot_states_e
 {
@@ -35,9 +53,13 @@ typedef enum path_selection_e
 #define turnSpeedSlow (0.1)
 #define stopSpeed (0.00)
 #define crossConfirmedTime (20)
+#define EPSILON 0.005
 
+orientation    robot_orientation;
+direction_t    robot_direction;
 robot_states_t RobotState;
 robot_states_t RobotStateLastLoop;
+geometry_msgs::Twist base_cmd;
 bool           WallDetectedFront;
 bool           RobotStopped;
 bool           CrossingDetectedLeft;
@@ -70,9 +92,15 @@ void Jhonny5_init(void);
 void Jhonny5_state_machine(void);
 void set_velocities(float lin_vel, float ang_vel);
 void turn(float angleDeg, double angularSpeed, int direction);
+geometry_msgs::Twist turn_left(void);
+geometry_msgs::Twist turn_right(void);
+orientation get_orienation_from_direction(direction_t d);
+direction_t get_left_dir(direction_t d);
+direction_t get_right_dir(direction_t d);
 /* Callback functions */
 void laserScanFrontCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void getOdom(const nav_msgs::Odometry::ConstPtr& msg);
+void odometryCallback(const nav_msgs::Odometry::ConstPtr& odom);
 #endif /* JHONNY5_MAIN_HH */

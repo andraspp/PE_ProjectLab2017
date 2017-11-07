@@ -8,17 +8,19 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
  
     ros::Rate loop_rate(10);
-    geometry_msgs::Twist base_cmd;
+    
     
     ros::topic::waitForMessage<nav_msgs::Odometry>("/jhonny5/odom");
     ros::Subscriber sub = nh.subscribe("/jhonny5/odom",1000,getOdom);
     ros::Subscriber laserScanFrontCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan",10,&laserScanFrontCallback);
     ros::Subscriber laserScanLeftCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan_left",10,&laserScanLeftCallback);
     ros::Subscriber laserScanRightCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan_right",10,&laserScanRightCallback);
- 
-    cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    ros::Subscriber odometryCheck = nh.subscribe<nav_msgs::Odometry>("/jhonny5/odomodom", sizeof(nav_msgs::Odometry), &odometryCallback);
 
-    set_velocities(stopSpeed, stopSpeed);
+    cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    
+    base_cmd.linear.x = base_cmd.linear.y = base_cmd.angular.z = 0;
+    //set_velocities(stopSpeed, stopSpeed);
 
     while(ros::ok())
     {
@@ -36,6 +38,7 @@ int main(int argc, char **argv)
         ROS_INFO("Path has been chosen: %d", PathSelected);
         ROS_INFO("Path update suppressed: %d", SuppressPathUpdate);
         ROS_INFO("Turn finished: %d\n", TurnFinished);
+        cmd_vel_pub_.publish(base_cmd);
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -44,6 +47,7 @@ int main(int argc, char **argv)
 
 void Jhonny5_init(void)
 {
+    robot_direction = DOWN;
     RobotState = init;
     RobotStateLastLoop = RobotState;
     WallDetectedFront = false;
@@ -134,18 +138,44 @@ void Jhonny5_state_machine(void)
             {
             case left:
                 ROS_INFO("Entered left case");
-                turn(87.0, turnSpeed, 0);
+                //turn(87.0, turnSpeed, 0);
+                if (!TurnFinished) {
+                    base_cmd = turn_left();
+                    if (base_cmd.linear.x == 0.0) {
+                      robot_direction = get_left_dir(robot_direction);
+                      TurnFinished = true;
+                    }
+                }
+         
                 ROS_INFO("Finished left case");
                 break;
             case front:
                 TurnFinished = true;
                 break;
             case right:
-                turn(87.0, turnSpeed, 1);
+                if (!TurnFinished) {
+                    base_cmd = turn_right();
+                    if (base_cmd.linear.x == 0.0) {
+                      robot_direction = get_right_dir(robot_direction);
+                      TurnFinished = true;
+                    }
+                }
+                //turn(87.0, turnSpeed, 1);
                 break;
             case turnaround:
                 ROS_INFO("Entered turnaround case");
-                turn(177.0, turnSpeed, 1);
+                if (!TurnFinished) {
+                    base_cmd = turn_right();
+                    if (base_cmd.linear.x == 0.0) {
+                       robot_direction = get_right_dir(robot_direction);
+                       base_cmd = turn_right();
+                       if (base_cmd.linear.x == 0.0) {
+                         robot_direction = get_right_dir(robot_direction);
+                         TurnFinished = true;
+                       }
+                    }
+                }
+                //turn(177.0, turnSpeed, 0);
                 ROS_INFO("Finished turnaround case");
                 break;
             default:
@@ -158,11 +188,12 @@ void Jhonny5_state_machine(void)
         }
         break;
     case moving:
-        set_velocities(stopSpeed, forwardSpeed);
+        base_cmd.angular.z = forwardSpeed;
         PathSelected = false;
         ChosenPath   = none;
         TurnFinished = false;
 
+        //Path
         if(   (   (CrossingDetectedRight == false)
                && (CrossingDetectedLeft  == false)
               )
@@ -217,7 +248,7 @@ void turn(float angleDeg, double angularSpeed, int direction)
         rate.sleep();
 
     }
-    set_velocities(stopSpeed, stopSpeed);
+    //set_velocities(stopSpeed, stopSpeed);
     TurnFinished = true;
 }
 
@@ -334,4 +365,63 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
      else{}
      //ROS_INFO("Right average: %1.8f\n",AvgRightRange);
      //ROS_INFO("CrossRight: %d\n", CrossingDetectedRight);
+}
+
+void odometryCallback(const nav_msgs::Odometry::ConstPtr& odom) {
+  robot_orientation.z = odom->pose.pose.orientation.z;
+  robot_orientation.w = odom->pose.pose.orientation.w;
+}
+
+geometry_msgs::Twist turn_left(void) {
+  direction_t   dir_target = get_left_dir(robot_direction);
+  orientation   or_target  = get_orienation_from_direction(dir_target);
+  geometry_msgs::Twist twist;
+
+  if ((fabs(or_target.z - robot_orientation.z) < EPSILON && fabs(or_target.w - robot_orientation.w) < EPSILON) ||
+      (fabs(or_target.z + robot_orientation.z) < EPSILON && fabs(or_target.w + robot_orientation.w) < EPSILON)) {
+    printf("Stop turning...\n");
+    twist.linear.x = 0.0;
+  } else {
+    twist.linear.x = 0.1;
+  }
+  return twist;
+}
+
+geometry_msgs::Twist turn_right(void) {
+  direction_t   dir_target = get_right_dir(robot_direction);
+  orientation   or_target  = get_orienation_from_direction(dir_target);
+  geometry_msgs::Twist twist;
+
+  if ((fabs(or_target.z - robot_orientation.z) < EPSILON && fabs(or_target.w - robot_orientation.w) < EPSILON) ||
+      (fabs(or_target.z + robot_orientation.z) < EPSILON && fabs(or_target.w + robot_orientation.w) < EPSILON)) {
+    printf("Stop turning...\n");
+    twist.linear.x = 0.0;
+  } else {
+    twist.linear.x = -0.1;
+  }
+  return twist;
+}
+
+orientation get_orienation_from_direction(direction_t d) {
+  switch (d) {
+    case DOWN:
+      return orientation(sin(2.0 * M_PI / 2.0), cos(2.0 * M_PI / 2.0));
+
+    case LEFT:
+      return orientation(sin(1.5 * M_PI / 2.0), cos(1.5 * M_PI / 2.0));
+
+    case UP:
+      return orientation(sin(1.0 * M_PI / 2.0), cos(1.0 * M_PI / 2.0));
+
+    case RIGHT:
+      return orientation(sin(0.5 * M_PI / 2.0), cos(0.5 * M_PI / 2.0));
+  }
+}
+
+direction_t get_left_dir(direction_t d) {
+  return (direction_t)((d + 3) % 4);
+}
+
+direction_t get_right_dir(direction_t d) {
+  return (direction_t)((d + 1) % 4);
 }
