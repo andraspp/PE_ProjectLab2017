@@ -10,6 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     actionlib_msgs
+    nav_msgs
  )
 
 ## System dependencies are found with CMake's conventions
@@ -69,6 +70,7 @@ add_action_files(
 generate_messages(
   DEPENDENCIES
   actionlib_msgs
+  nav_msgs
   std_msgs  # Or other packages containing msgs
 )
 
@@ -108,6 +110,7 @@ catkin_package(
    message_runtime
    std_msgs
    actionlib_msgs
+   nav_msgs
 #  DEPENDS system_lib
 )
 
@@ -122,6 +125,7 @@ include_directories(
   ${GAZEBO_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   jhonny5_state_machine
+  ##jhonny5_signal_processing
 )
 
 ## Declare a C++ library
@@ -138,6 +142,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(jhonny5_state_machine jhonny5_main.cpp)
+##add_executable(jhonny5_signal_processing jhonny5_signal_proc.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +158,9 @@ add_executable(jhonny5_state_machine jhonny5_main.cpp)
 target_link_libraries(
   jhonny5_state_machine ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES}
 )
+##target_link_libraries(
+##  jhonny5_signal_processing ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES}
+##)
 
 #############
 ## Install ##
