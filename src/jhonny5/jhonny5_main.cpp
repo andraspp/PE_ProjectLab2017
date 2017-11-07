@@ -9,7 +9,8 @@ int main(int argc, char **argv)
  
     ros::Rate loop_rate(10);
     geometry_msgs::Twist base_cmd;
-    
+
+    ros::Subscriber odometryCheck = nh.subscribe<nav_msgs::Odometry>("odom", sizeof(nav_msgs::Odometry), &odometryCallback);
     ros::topic::waitForMessage<nav_msgs::Odometry>("/jhonny5/odom");
     ros::Subscriber sub = nh.subscribe("/jhonny5/odom",1000,getOdom);
     ros::Subscriber laserScanFrontCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan",10,&laserScanFrontCallback);
@@ -19,6 +20,8 @@ int main(int argc, char **argv)
     cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
     set_velocities(stopSpeed, stopSpeed);
+
+    bool turnOnce = true;
 
     while(ros::ok())
     {
@@ -46,6 +49,8 @@ void Jhonny5_init(void)
 {
     RobotState = init;
     RobotStateLastLoop = RobotState;
+
+    robot_direction = DOWN;
     WallDetectedFront = false;
     CrossingDetectedLeft = false;
     CrossingDetectedLeftLL = CrossingDetectedLeft;
@@ -60,7 +65,7 @@ void Jhonny5_init(void)
 void Jhonny5_state_machine(void)
 {
     RobotStateLastLoop = RobotState;
-    
+
     /* State switch conditions */
     switch(RobotState)
     {
@@ -334,4 +339,63 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
      else{}
      //ROS_INFO("Right average: %1.8f\n",AvgRightRange);
      //ROS_INFO("CrossRight: %d\n", CrossingDetectedRight);
+}
+
+void odometryCallback(const nav_msgs::Odometry::ConstPtr& odom) {
+  robot_orientation.z = odom->pose.pose.orientation.z;
+  robot_orientation.w = odom->pose.pose.orientation.w;
+}
+
+geometry_msgs::Twist turn_left(void) {
+  direction   dir_target = get_left_dir(robot_direction);
+  orientation or_target  = get_orienation_from_direction(dir_target);
+  geometry_msgs::Twist twist;
+
+  if ((fabs(or_target.z - robot_orientation.z) < EPSILON && fabs(or_target.w - robot_orientation.w) < EPSILON) ||
+      (fabs(or_target.z + robot_orientation.z) < EPSILON && fabs(or_target.w + robot_orientation.w) < EPSILON)) {
+    printf("Stop turning...\n");
+    twist.linear.x = 0.0;
+  } else {
+    twist.linear.x = 0.1;
+  }
+  return twist;
+}
+
+geometry_msgs::Twist turn_right(void) {
+  direction   dir_target = get_right_dir(robot_direction);
+  orientation or_target  = get_orienation_from_direction(dir_target);
+  geometry_msgs::Twist twist;
+
+  if ((fabs(or_target.z - robot_orientation.z) < EPSILON && fabs(or_target.w - robot_orientation.w) < EPSILON) ||
+      (fabs(or_target.z + robot_orientation.z) < EPSILON && fabs(or_target.w + robot_orientation.w) < EPSILON)) {
+    printf("Stop turning...\n");
+    twist.linear.x = 0.0;
+  } else {
+    twist.linear.x = -0.1;
+  }
+  return twist;
+}
+
+orientation get_orienation_from_direction(direction d) {
+  switch (d) {
+    case DOWN:
+      return orientation(sin(2.0 * M_PI / 2.0), cos(2.0 * M_PI / 2.0));
+
+    case LEFT:
+      return orientation(sin(1.5 * M_PI / 2.0), cos(1.5 * M_PI / 2.0));
+
+    case UP:
+      return orientation(sin(1.0 * M_PI / 2.0), cos(1.0 * M_PI / 2.0));
+
+    case RIGHT:
+      return orientation(sin(0.5 * M_PI / 2.0), cos(0.5 * M_PI / 2.0));
+  }
+}
+
+direction get_left_dir(direction d) {
+  return (direction)((d + 3) % 4);
+}
+
+direction get_right_dir(direction d) {
+  return (direction)((d + 1) % 4);
 }
