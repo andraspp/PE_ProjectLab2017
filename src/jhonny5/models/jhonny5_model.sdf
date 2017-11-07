@@ -793,7 +793,7 @@
      <torque>200</torque>
      <commandTopic>cmd_vel</commandTopic>
      <robotBaseFrame>base_frame</robotBaseFrame>
-     <odometryTopic>odom</odometryTopic>
+     <odometryTopic>/jhonny5/odom</odometryTopic>
      <odometryFrame>odom</odometryFrame>
      <broadcastTF>1</broadcastTF>
    </plugin>
