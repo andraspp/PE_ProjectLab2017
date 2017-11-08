@@ -170,8 +170,19 @@ void Jhonny5_state_machine(void)
             PathSelected = none;
 
             if(SuppressPathUpdateTimer > 0)
-            {
-                SuppressPathUpdateTimer--;
+            {   
+                if(   (CrossingDetectedLeftLL  != CrossingDetectedLeft)
+                   || (CrossingDetectedRightLL != CrossingDetectedRight)
+                   || (WallDetectedFront       == true)
+                  )
+                {
+                    SuppressPathUpdateTimer = 0;
+                    SuppressPathUpdate = false;
+                }
+                else
+                {
+                    SuppressPathUpdateTimer--;
+                }
             }
             else
             {
