@@ -18,8 +18,9 @@
 typedef enum robot_states_e
 {
     init = 0,
-    position_determination,
-    moving
+    position_determination = 1,
+    moving = 2,
+    turning = 3
 } robot_states_t;
 
 
@@ -53,7 +54,8 @@ typedef enum path_selection_e
 #define turnSpeed (0.25)
 #define turnSpeedSlow (0.1)
 #define stopSpeed (0.00)
-#define crossConfirmedTime (20)
+#define crossConfirmedTime (90)
+#define suppressionTime (110)
 #define EPSILON 0.005
 
 robot_states_t RobotState;
@@ -78,6 +80,7 @@ bool           TurnFinished;
 path_selection_t ChosenPath;
 bool           PathSelected;
 bool           SuppressPathUpdate;
+unsigned int   SuppressPathUpdateTimer;
 unsigned int   CrossConfirmTimerLeft;
 unsigned int   CrossConfirmTimerRight;
 double         YawCurrent;
@@ -99,11 +102,9 @@ orientation get_orienation_from_direction(direction d);
 direction get_left_dir(direction d);
 direction get_right_dir(direction d);
 void set_velocities(float lin_vel, float ang_vel);
-void turn(float angleDeg, double angularSpeed, int direction);
 /* Callback functions */
 void odometryCallback(const nav_msgs::Odometry::ConstPtr& odom);
 void laserScanFrontCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
-void getOdom(const nav_msgs::Odometry::ConstPtr& msg);
 #endif /* JHONNY5_MAIN_HH */

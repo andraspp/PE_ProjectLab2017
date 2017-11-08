@@ -12,7 +12,6 @@ int main(int argc, char **argv)
 
     ros::Subscriber odometryCheck = nh.subscribe<nav_msgs::Odometry>("/jhonny5/odom", sizeof(nav_msgs::Odometry), &odometryCallback);
     ros::topic::waitForMessage<nav_msgs::Odometry>("/jhonny5/odom");
-    ros::Subscriber sub = nh.subscribe("/jhonny5/odom",1000,getOdom);
     ros::Subscriber laserScanFrontCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan",10,&laserScanFrontCallback);
     ros::Subscriber laserScanLeftCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan_left",10,&laserScanLeftCallback);
     ros::Subscriber laserScanRightCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan_right",10,&laserScanRightCallback);
@@ -28,17 +27,14 @@ int main(int argc, char **argv)
         Jhonny5_state_machine();
 
         ROS_INFO("Front dist average: %1.8f",AvgFrontRange);
-        ROS_INFO("WallFront: %d", WallDetectedFront);
         ROS_INFO("Left dist average: %1.8f",AvgLeftRange);
-        ROS_INFO("CrossLeft: %d", CrossingDetectedLeft);
         ROS_INFO("Right dist average: %1.8f",AvgRightRange);
-        ROS_INFO("CrossRight: %d", CrossingDetectedRight);
+        ROS_INFO("Position determination: %d, %d, %d", CrossingDetectedLeft, WallDetectedFront, CrossingDetectedRight);
         ROS_INFO("RobotState: %d", RobotState);
-        ROS_INFO("Yaw current: %1.8f", YawCurrent);
         ROS_INFO("ChosenPath: %d", ChosenPath);
         ROS_INFO("Path has been chosen: %d", PathSelected);
         ROS_INFO("Path update suppressed: %d", SuppressPathUpdate);
-        ROS_INFO("Turn finished: %d\n", TurnFinished);
+        ROS_INFO("Turn finished: %d\n\n", TurnFinished);
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -60,6 +56,7 @@ void Jhonny5_init(void)
     SuppressPathUpdate = false;
     PathSelected = false;
     ChosenPath = none;
+    SuppressPathUpdateTimer = 0;
 }
 
 void Jhonny5_state_machine(void)
@@ -73,10 +70,17 @@ void Jhonny5_state_machine(void)
         RobotState = position_determination;
         break;
     case position_determination:
-        if(   (TurnFinished == true)
-           && (ChosenPath   != none)
-           && (WallDetectedFront == false)
+        if(   (PathSelected == true)
+           && (ChosenPath != front)
+           && (ChosenPath != none)
           )
+        {
+            RobotState = turning;
+        }
+        else if(   (PathSelected == true)
+                && (ChosenPath == front)
+                && (WallDetectedFront == false)
+               )
         {
             RobotState = moving;
         }
@@ -99,49 +103,86 @@ void Jhonny5_state_machine(void)
             RobotState = moving;
         }
         break;
+    case turning:
+        if(TurnFinished == true)
+        {
+            RobotState = moving;
+        }
+        else
+        {
+            RobotState = turning;
+        }
+        break;
     default:
         RobotState = position_determination;
         break;
     }
 
     /* State dependent actions */
-
-    switch(RobotState)
+    if(RobotStateLastLoop != RobotState)
     {
-    case position_determination:
-        if(PathSelected == false)
+        switch(RobotStateLastLoop)
         {
-          ROS_INFO("Position determination: %d, %d, %d \n", CrossingDetectedRight, WallDetectedFront, CrossingDetectedLeft);
+        case position_determination:
+            TurnFinished = false;
+            break;
+        case moving:
+            PathSelected = false;
+            break;
+        case turning: 
+            break;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        switch(RobotState)
+        {
+        case position_determination:
             if(CrossingDetectedRight == true)
             {
                 ChosenPath = right;
+                SuppressPathUpdateTimer = suppressionTime;
             }
             else if(WallDetectedFront == false)
             {
                 ChosenPath = front;
+                SuppressPathUpdateTimer = 0;
             }
             else if(CrossingDetectedLeft == true)
             {
                 ChosenPath = left;
+                SuppressPathUpdateTimer = suppressionTime;
             }
             else
             {
                 ChosenPath = turnaround;
+                SuppressPathUpdateTimer = 0;
             }
             PathSelected = true;
             SuppressPathUpdate = true;
-        }
-        else if(   (TurnFinished == false)
-                && (PathSelected == true)
-               )
-        {
-            ROS_INFO("Entered path switch-case");
+            
+            set_velocities(stopSpeed, stopSpeed);
+            break;
+        case moving:
+            set_velocities(stopSpeed, forwardSpeed);
+            PathSelected = none;
+
+            if(SuppressPathUpdateTimer > 0)
+            {
+                SuppressPathUpdateTimer--;
+            }
+            else
+            {
+                SuppressPathUpdate = false;
+            }
+            break;
+        case turning:
             switch(ChosenPath)
             {
             case left:
-                ROS_INFO("Entered left case");
                 turn_left();
-                ROS_INFO("Finished left case");
                 break;
             case front:
                 TurnFinished = true;
@@ -150,92 +191,28 @@ void Jhonny5_state_machine(void)
                 turn_right();
                 break;
             case turnaround:
-                ROS_INFO("Entered turnaround case");
                 turn_left();
                 turn_left();
-                ROS_INFO("Finished turnaround case");
                 break;
             default:
                 break;
             }
-            PathSelected = false;
+            TurnFinished = true;
+            break;
+        default:
+            break;
         }
-        else
-        {
-
-        }
-        break;
-    case moving:
-        set_velocities(stopSpeed, forwardSpeed);
-        PathSelected = false;
-        ChosenPath   = none;
-        TurnFinished = false;
-
-        if(   (   (CrossingDetectedRight == false)
-               && (CrossingDetectedLeft  == false)
-              )
-           || (CrossingDetectedLeftLL  != CrossingDetectedLeft)
-           || (CrossingDetectedRightLL != CrossingDetectedRight)
-          )
-        {
-            SuppressPathUpdate = false;
-        }
-        break;
-    default:
-        break;
     }
+    
 }
 
 void set_velocities(float lin_vel, float ang_vel)
-    {
-        geometry_msgs::Twist msg;
-        msg.linear.x = lin_vel;
-        msg.angular.z = ang_vel;
-
-        cmd_vel_pub_.publish(msg);
-    }
-
-void turn(float angleDeg, double angularSpeed, int direction)
 {
-    float angleRad = angleDeg*M_PI/180;
-    float endAngleRad = YawCurrent - angleRad;
-    if (endAngleRad < -M_PI)
-    {
-       endAngleRad = M_PI + (endAngleRad + M_PI);
-    }
-    ros::Rate rate(10);
-    while(YawCurrent > endAngleRad)
-    {
-        /* slow down turn to avoid as much overshoot as possible*/
-        if(endAngleRad >= (0.7*YawCurrent))
-        {
-            angularSpeed = turnSpeedSlow;
-        }
-        /* set turning direction */
-        if(direction == 0)
-        {
-            set_velocities(angularSpeed, stopSpeed);
-        }
-        else
-        {
-            set_velocities(-angularSpeed, stopSpeed);
-        }
+    geometry_msgs::Twist msg;
+    msg.linear.x = lin_vel;
+    msg.angular.z = ang_vel;
 
-        ros::spinOnce();
-        rate.sleep();
-
-    }
-    set_velocities(stopSpeed, stopSpeed);
-    TurnFinished = true;
-}
-
-void getOdom(const nav_msgs::Odometry::ConstPtr& msg)
-{
-     tf::Quaternion quat;
-     tf::quaternionMsgToTF(msg->pose.pose.orientation, quat);
-
-     tf::Matrix3x3(quat).getRPY(RollCurrent,PitchCurrent,YawCurrent);
-     //ROS_INFO("roll=%f, pitch=%f, yaw=%f ",RollCurrent,PitchCurrent,YawCurrent);
+    cmd_vel_pub_.publish(msg);
 }
 
 void laserScanFrontCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
@@ -253,7 +230,9 @@ void laserScanFrontCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
         AvgFrontRange = sumfront/10;
      }
 
-     if(AvgFrontRange > (wallCloseThreshold + wallCloseOffset))
+     if(   (AvgFrontRange > (wallCloseThreshold + wallCloseOffset))
+        || (RobotState == turning)
+       )
      {
         WallDetectedFront = false;
      }
@@ -283,9 +262,18 @@ void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
 
      CrossingDetectedLeftLL = CrossingDetectedLeft;
 
-     if(AvgLeftRange >= (wallCloseThreshold + wallCloseOffset))
+     if(   (AvgLeftRange <= wallCloseThreshold)
+        || (RobotState == turning)
+       )
      {
-         if(CrossConfirmTimerLeft > 0)
+         CrossingDetectedLeft = false;
+         CrossConfirmTimerLeft = crossConfirmedTime;
+     }
+     else if(AvgLeftRange >= (wallCloseThreshold + wallCloseOffset))
+     {
+         if(   (CrossConfirmTimerLeft > 0)
+            && (WallDetectedFront == false)
+           )
          {
              CrossConfirmTimerLeft--;
          }
@@ -294,13 +282,7 @@ void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
              CrossingDetectedLeft = true;
          }
      }
-     else if(AvgLeftRange <= wallCloseThreshold)
-     {
-         CrossingDetectedLeft = false;
-         CrossConfirmTimerLeft = crossConfirmedTime;
-     }
      else{}
-
 
      //ROS_INFO("Left average: %1.8f\n",AvgLeftRange);
      //ROS_INFO("CrossLeft: %d\n", CrossingDetectedLeft);
@@ -323,9 +305,19 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
 
      CrossingDetectedRightLL = CrossingDetectedRight;
 
-     if(AvgRightRange >= (wallCloseThreshold + wallCloseOffset))
+     
+     if(   (AvgRightRange <= wallCloseThreshold)
+        || (RobotState == turning)
+       )
      {
-         if(CrossConfirmTimerRight > 0)
+         CrossingDetectedRight = false;
+         CrossConfirmTimerRight = crossConfirmedTime;
+     }
+     else if(AvgRightRange >= (wallCloseThreshold + wallCloseOffset))
+     {
+         if(   (CrossConfirmTimerRight > 0)
+            && (WallDetectedFront == false)
+           )
          {
              CrossConfirmTimerRight--;
          }
@@ -333,11 +325,6 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
          {
              CrossingDetectedRight = true;
          }
-     }
-     else if(AvgRightRange <= wallCloseThreshold)
-     {
-         CrossingDetectedRight = false;
-         CrossConfirmTimerRight = crossConfirmedTime;
      }
      else{}
      //ROS_INFO("Right average: %1.8f\n",AvgRightRange);
@@ -377,9 +364,7 @@ geometry_msgs::Twist turn_left(void) {
   cmd_vel_pub_.publish(twist);
 
   robot_direction = dir_target;
-
   ROS_INFO("Finshed turning new direction: %s \n", str_directions[robot_direction]);
-
   return twist;
 }
 
@@ -409,7 +394,6 @@ ROS_INFO("Target direction: %s \n", str_directions[dir_target]);
   cmd_vel_pub_.publish(twist);
 
   robot_direction = dir_target;
-
   ROS_INFO("Finshed turning new direction: %s \n", str_directions[robot_direction]);
 
   return twist;
