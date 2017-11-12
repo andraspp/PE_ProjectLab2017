@@ -60,6 +60,7 @@ void Jhonny5_init(void)
     SuppressPathUpdateTimer = 0;
     EndTileDetected = false;
     EndGreenConfirmTimer = endGreenConfirmedTime;
+    TurnAroundCounter = 0;
 }
 
 void Jhonny5_state_machine(void)
@@ -76,6 +77,10 @@ void Jhonny5_state_machine(void)
         if(EndTileDetected == true)
         {
             RobotState = end;
+        }
+        else if(TurnAroundCounter >= 2)
+        {
+            RobotState = error;
         }
         else if(   (PathSelected == true)
                 && (ChosenPath != front)
@@ -100,6 +105,10 @@ void Jhonny5_state_machine(void)
         if(EndTileDetected == true)
         {
             RobotState = end;
+        }
+        else if(TurnAroundCounter >= 2)
+        {
+            RobotState = error;
         }
         else if(   (SuppressPathUpdate == false)
                 && (   (WallDetectedFront == true)
@@ -127,6 +136,8 @@ void Jhonny5_state_machine(void)
     case end:
         RobotState = end;
         break;
+    case error:
+        RobotState = error;
     default:
         RobotState = position_determination;
         break;
@@ -223,8 +234,17 @@ void Jhonny5_state_machine(void)
                 break;
             }
             TurnFinished = true;
+            if(ChosenPath == turnaround)
+            {
+                TurnAroundCounter++;
+            }
+            else
+            {
+                TurnAroundCounter = 0;
+            }
             break;
         case end:
+        case error:
             set_velocities(stopSpeed, stopSpeed);
             ros::shutdown();
             break;

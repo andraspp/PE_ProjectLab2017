@@ -19,10 +19,11 @@
 typedef enum robot_states_e
 {
     init = 0,
-    position_determination = 1,
-    moving = 2,
-    turning = 3,
-    end = 4
+    position_determination,
+    moving,
+    turning,
+    end,
+    error
 } robot_states_t;
 
 
@@ -85,6 +86,7 @@ bool           TurnFinished;
 path_selection_t ChosenPath;
 bool           PathSelected;
 bool           SuppressPathUpdate;
+unsigned char  TurnAroundCounter;
 unsigned int   SuppressPathUpdateTimer;
 unsigned int   CrossConfirmTimerLeft;
 unsigned int   CrossConfirmTimerRight;
