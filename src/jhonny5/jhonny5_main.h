@@ -4,12 +4,13 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <ros/ros.h>
-#include <std_msgs/Bool.h> 
+#include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 #include <actionlib/server/simple_action_server.h>
 #include <sensor_msgs/LaserScan.h>
+#include <sensor_msgs/Image.h>
 #include <nav_msgs/Odometry.h>
 #include <gazebo/gazebo.hh>
 #include <tf/tf.h>
@@ -104,6 +105,7 @@ direction get_right_dir(direction d);
 void set_velocities(float lin_vel, float ang_vel);
 /* Callback functions */
 void odometryCallback(const nav_msgs::Odometry::ConstPtr& odom);
+void cameraCallback(const sensor_msgs::Image::ConstPtr& scan);
 void laserScanFrontCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
