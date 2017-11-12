@@ -13,7 +13,7 @@ open(my $fh, '<', $maze_filename) or die "Could not open file '$maze_filename' $
 my $row_cnt = 0;
 my $col_cnt = 0;
 while (my $read = read $fh, my $char, 1) {
-  if ($char eq '#' || $char eq ' ') {
+  if ($char eq '#' || $char eq ' ' || $char eq 'E') {
     $maze[$row_cnt][$col_cnt++] = $char;
   } elsif ($char eq "\n") {
     $row_cnt++;
@@ -49,6 +49,11 @@ for (my $i = 0; $i < @maze; $i++) {
     if (@$row_ref[$j] eq '#') {
       print $fh "<include>\n";
       print $fh "\t<uri>model://unit_box</uri>\n";
+      print $fh "\t<pose>", $i * OFFSET - OFFSET, " ", $j * OFFSET - OFFSET, " 0 0 0 0</pose>\n";
+      print $fh "</include>\n";
+    } elsif (@$row_ref[$j] eq 'E') {
+      print $fh "<include>\n";
+      print $fh "\t<uri>model://ending_tile</uri>\n";
       print $fh "\t<pose>", $i * OFFSET - OFFSET, " ", $j * OFFSET - OFFSET, " 0 0 0 0</pose>\n";
       print $fh "</include>\n";
     }
