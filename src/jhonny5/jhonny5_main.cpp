@@ -12,6 +12,7 @@ int main(int argc, char **argv)
 
     ros::Subscriber odometryCheck = nh.subscribe<nav_msgs::Odometry>("/jhonny5/odom", sizeof(nav_msgs::Odometry), &odometryCallback);
     ros::topic::waitForMessage<nav_msgs::Odometry>("/jhonny5/odom");
+    ros::Subscriber endCheck = nh.subscribe<sensor_msgs::Image>("jhonny5/camera/img_scan/image_raw", sizeof(sensor_msgs::Image), &cameraCallback);
     ros::Subscriber laserScanFrontCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan",10,&laserScanFrontCallback);
     ros::Subscriber laserScanLeftCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan_left",10,&laserScanLeftCallback);
     ros::Subscriber laserScanRightCheck = nh.subscribe<sensor_msgs::LaserScan>("/jhonny5/laser/scan_right",10,&laserScanRightCallback);
@@ -129,7 +130,7 @@ void Jhonny5_state_machine(void)
         case moving:
             PathSelected = false;
             break;
-        case turning: 
+        case turning:
             break;
         default:
             break;
@@ -162,7 +163,7 @@ void Jhonny5_state_machine(void)
             }
             PathSelected = true;
             SuppressPathUpdate = true;
-            
+
             set_velocities(stopSpeed, stopSpeed);
             break;
         case moving:
@@ -170,7 +171,7 @@ void Jhonny5_state_machine(void)
             PathSelected = none;
 
             if(SuppressPathUpdateTimer > 0)
-            {   
+            {
                 if(   (CrossingDetectedLeftLL  != CrossingDetectedLeft)
                    || (CrossingDetectedRightLL != CrossingDetectedRight)
                    || (WallDetectedFront       == true)
@@ -214,7 +215,7 @@ void Jhonny5_state_machine(void)
             break;
         }
     }
-    
+
 }
 
 void set_velocities(float lin_vel, float ang_vel)
@@ -316,7 +317,7 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
 
      CrossingDetectedRightLL = CrossingDetectedRight;
 
-     
+
      if(   (AvgRightRange <= wallCloseThreshold)
         || (RobotState == turning)
        )
@@ -340,6 +341,28 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
      else{}
      //ROS_INFO("Right average: %1.8f\n",AvgRightRange);
      //ROS_INFO("CrossRight: %d\n", CrossingDetectedRight);
+}
+
+void cameraCallback(const sensor_msgs::Image::ConstPtr& scan) {
+  int mid_width   = scan->width / 2;
+  int mid_height  = scan->height / 2;
+
+  const int step      = 3;
+  const int end_green = 149;
+
+  int red   = scan->data[mid_width * step + mid_height * step];
+  int green = scan->data[mid_width * step + mid_height * step + 1];
+  int blue  = scan->data[mid_width * step + mid_height * step + 2];
+
+  ROS_INFO("RGB: %d, %d, %d", red, green, blue);
+  if (green == end_green) {
+    // Stop and exit...
+    geometry_msgs::Twist twist;
+    twist.linear.x  = 0.0;
+    twist.angular.z = 0.0;
+    cmd_vel_pub_.publish(twist);
+    ros::shutdown();
+  }
 }
 
 void odometryCallback(const nav_msgs::Odometry::ConstPtr& odom) {
