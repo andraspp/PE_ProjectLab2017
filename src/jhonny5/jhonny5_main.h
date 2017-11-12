@@ -21,7 +21,8 @@ typedef enum robot_states_e
     init = 0,
     position_determination = 1,
     moving = 2,
-    turning = 3
+    turning = 3,
+    end = 4
 } robot_states_t;
 
 
@@ -57,6 +58,8 @@ typedef enum path_selection_e
 #define stopSpeed (0.00)
 #define crossConfirmedTime (100)
 #define suppressionTime (110)
+#define endGreenOffset (25)
+#define endGreenConfirmedTime (60)
 #define EPSILON 0.005
 
 robot_states_t RobotState;
@@ -71,6 +74,7 @@ bool           CrossingDetectedLeft;
 bool           CrossingDetectedLeftLL;
 bool           CrossingDetectedRight;
 bool           CrossingDetectedRightLL;
+bool           EndTileDetected;
 float          LsFrontRanges[10];
 float          LsLeftRanges[10];
 float          LsRightRanges[10];
@@ -84,6 +88,8 @@ bool           SuppressPathUpdate;
 unsigned int   SuppressPathUpdateTimer;
 unsigned int   CrossConfirmTimerLeft;
 unsigned int   CrossConfirmTimerRight;
+unsigned int   EndGreenConfirmTimer;
+unsigned int   red, green, blue;
 double         YawCurrent;
 double         RollCurrent;
 double         PitchCurrent;

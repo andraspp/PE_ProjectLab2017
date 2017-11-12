@@ -21,12 +21,10 @@ int main(int argc, char **argv)
 
     set_velocities(stopSpeed, stopSpeed);
 
-    bool turnOnce = true;
-
     while(ros::ok())
     {
         Jhonny5_state_machine();
-
+        /*
         ROS_INFO("Front dist average: %1.8f",AvgFrontRange);
         ROS_INFO("Left dist average: %1.8f",AvgLeftRange);
         ROS_INFO("Right dist average: %1.8f",AvgRightRange);
@@ -36,6 +34,8 @@ int main(int argc, char **argv)
         ROS_INFO("Path has been chosen: %d", PathSelected);
         ROS_INFO("Path update suppressed: %d", SuppressPathUpdate);
         ROS_INFO("Turn finished: %d\n\n", TurnFinished);
+        */
+        ROS_INFO("RGB: %d, %d, %d", red, green, blue);
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -58,6 +58,8 @@ void Jhonny5_init(void)
     PathSelected = false;
     ChosenPath = none;
     SuppressPathUpdateTimer = 0;
+    EndTileDetected = false;
+    EndGreenConfirmTimer = endGreenConfirmedTime;
 }
 
 void Jhonny5_state_machine(void)
@@ -71,10 +73,14 @@ void Jhonny5_state_machine(void)
         RobotState = position_determination;
         break;
     case position_determination:
-        if(   (PathSelected == true)
-           && (ChosenPath != front)
-           && (ChosenPath != none)
-          )
+        if(EndTileDetected == true)
+        {
+            RobotState = end;
+        }
+        else if(   (PathSelected == true)
+                && (ChosenPath != front)
+                && (ChosenPath != none)
+               )
         {
             RobotState = turning;
         }
@@ -91,11 +97,15 @@ void Jhonny5_state_machine(void)
         }
         break;
     case moving:
-        if(   (SuppressPathUpdate == false)
-           && (   (WallDetectedFront == true)
-               || (CrossingDetectedRight == true)
-              )
-          )
+        if(EndTileDetected == true)
+        {
+            RobotState = end;
+        }
+        else if(   (SuppressPathUpdate == false)
+                && (   (WallDetectedFront == true)
+                    || (CrossingDetectedRight == true)
+                   )
+               )
         {
             RobotState = position_determination;
         }
@@ -113,6 +123,9 @@ void Jhonny5_state_machine(void)
         {
             RobotState = turning;
         }
+        break;
+    case end:
+        RobotState = end;
         break;
     default:
         RobotState = position_determination;
@@ -211,6 +224,10 @@ void Jhonny5_state_machine(void)
             }
             TurnFinished = true;
             break;
+        case end:
+            set_velocities(stopSpeed, stopSpeed);
+            ros::shutdown();
+            break;
         default:
             break;
         }
@@ -235,12 +252,9 @@ void laserScanFrontCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
      {
          LsFrontRanges[i] = scan->ranges[i];
          sumfront += LsFrontRanges[i];
-         //printf("Front range data %d : %1.8f\n",i, LsFrontRanges[i]);
      }
-     //if (RobotState == moving) //freeze while turning
-     {
-        AvgFrontRange = sumfront/10;
-     }
+
+     AvgFrontRange = sumfront/10;
 
      if(   (AvgFrontRange > (wallCloseThreshold + wallCloseOffset))
         || (RobotState == turning)
@@ -253,8 +267,6 @@ void laserScanFrontCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
         WallDetectedFront = true;
      }
      else{}
-     //ROS_INFO("Front average: %1.8f\n",AvgFrontRange);
-     //ROS_INFO("Wall Front: %d\n", WallDetectedFront);
 }
 
 void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
@@ -265,12 +277,9 @@ void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
      {
          LsLeftRanges[j] = scan->ranges[j];
          sumleft += LsLeftRanges[j];
-         //printf("Left range data %d : %1.8f\n",j, LsLeftRanges[j]);
      }
-     //if (RobotState == moving) //freeze while turning
-     {
-        AvgLeftRange = sumleft/10;
-     }
+
+     AvgLeftRange = sumleft/10;
 
      CrossingDetectedLeftLL = CrossingDetectedLeft;
 
@@ -296,8 +305,6 @@ void laserScanLeftCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
      }
      else{}
 
-     //ROS_INFO("Left average: %1.8f\n",AvgLeftRange);
-     //ROS_INFO("CrossLeft: %d\n", CrossingDetectedLeft);
 }
 
 void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
@@ -308,12 +315,9 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
      {
          LsRightRanges[k] = scan->ranges[k];
          sumright += LsRightRanges[k];
-         //printf("Right range data %d : %1.8f\n",k, LsRightRanges[k]);
      }
-     //if (RobotState == moving) //freeze while turning
-     {
-        AvgRightRange = sumright/10;
-     }
+
+     AvgRightRange = sumright/10;
 
      CrossingDetectedRightLL = CrossingDetectedRight;
 
@@ -339,8 +343,7 @@ void laserScanRightCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
          }
      }
      else{}
-     //ROS_INFO("Right average: %1.8f\n",AvgRightRange);
-     //ROS_INFO("CrossRight: %d\n", CrossingDetectedRight);
+
 }
 
 void cameraCallback(const sensor_msgs::Image::ConstPtr& scan) {
@@ -350,18 +353,27 @@ void cameraCallback(const sensor_msgs::Image::ConstPtr& scan) {
   const int step      = 3;
   const int end_green = 149;
 
-  int red   = scan->data[mid_width * step + mid_height * step];
-  int green = scan->data[mid_width * step + mid_height * step + 1];
-  int blue  = scan->data[mid_width * step + mid_height * step + 2];
+  red   = scan->data[mid_width * step + mid_height * step];
+  green = scan->data[mid_width * step + mid_height * step + 1];
+  blue  = scan->data[mid_width * step + mid_height * step + 2];
 
   ROS_INFO("RGB: %d, %d, %d", red, green, blue);
-  if (green == end_green) {
-    // Stop and exit...
-    geometry_msgs::Twist twist;
-    twist.linear.x  = 0.0;
-    twist.angular.z = 0.0;
-    cmd_vel_pub_.publish(twist);
-    ros::shutdown();
+  if (   (green >= (unsigned int)(end_green - endGreenOffset))
+      && (green <= (unsigned int)(end_green + endGreenOffset))
+     ) 
+  {
+      if(EndGreenConfirmTimer > 0)
+      {
+          EndGreenConfirmTimer--;
+      }
+      else
+      {
+        EndTileDetected = true;
+      }
+  }
+  else
+  {
+      EndGreenConfirmTimer = endGreenConfirmedTime;
   }
 }
 
@@ -381,12 +393,9 @@ geometry_msgs::Twist turn_left(void) {
     "UP",
     "RIGHT"
   };
-  ROS_INFO("Target direction: %s \n", str_directions[dir_target]);
-
 
   while (!((fabs(or_target.z - robot_orientation.z) < EPSILON && fabs(or_target.w - robot_orientation.w) < EPSILON) ||
       (fabs(or_target.z + robot_orientation.z) < EPSILON && fabs(or_target.w + robot_orientation.w) < EPSILON))) {
-    // printf("almafa: (%f, %f), (%f, %f) \n", or_target.z,  or_target.w,  robot_orientation.z, robot_orientation.w);
     twist.linear.x = 0.1;
     cmd_vel_pub_.publish(twist);
 
@@ -413,7 +422,6 @@ geometry_msgs::Twist turn_right(void) {
     "UP",
     "RIGHT"
   };
-ROS_INFO("Target direction: %s \n", str_directions[dir_target]);
 
   while (!((fabs(or_target.z - robot_orientation.z) < EPSILON && fabs(or_target.w - robot_orientation.w) < EPSILON) ||
       (fabs(or_target.z + robot_orientation.z) < EPSILON && fabs(or_target.w + robot_orientation.w) < EPSILON))) {

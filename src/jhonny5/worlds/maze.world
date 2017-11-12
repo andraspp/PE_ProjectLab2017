@@ -22,7 +22,7 @@
 	<pose>-4 4 0 0 0 0</pose>
 </include>
 <include>
-	<uri>model://unit_box</uri>
+	<uri>model://ending_tile</uri>
 	<pose>-4 8 0 0 0 0</pose>
 </include>
 <include>
@@ -44,10 +44,6 @@
 <include>
 	<uri>model://unit_box</uri>
 	<pose>0 4 0 0 0 0</pose>
-</include>
-<include>
-	<uri>model://ending_tile</uri>
-	<pose>0 8 0 0 0 0</pose>
 </include>
 <include>
 	<uri>model://unit_box</uri>
