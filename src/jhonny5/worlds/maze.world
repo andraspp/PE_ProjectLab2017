@@ -89,6 +89,10 @@
 	<uri>model://unit_box</uri>
 	<pose>8 20 0 0 0 0</pose>
 </include>
+<include>
+  <uri>model://ending_tile</uri>
+  <pose>4 8 0.001 0 0 0</pose>
+</include>
 		<!-- MAZE END -->
 	</world>
 </sdf>
